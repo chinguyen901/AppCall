@@ -1,22 +1,46 @@
-# AppCall Backend (Vercel + Neon + PortSIP)
+# AppCall Demo (Android + Vercel + Neon + PortSIP)
 
-Backend toi gian cho app Android goi audio theo flow:
+Project da duoc chia theo 2 phan:
+
+- Android app: `AndroidSample/AndroidSample/SIPSample_AndroidStudio`
+- Backend Vercel: code o root (`api`, `lib`, `db`), va huong dan tach repo o `backend-vercel/README.md`
+
+Flow MVP:
 
 - Login
+- Register account
 - Chon user de goi
 - Start call audio (PortSIP)
 - End call
 - Logout
 
-## 1) Deploy stack
+## 1) Android build
+
+- Open Android Studio
+- Open folder: `AndroidSample/AndroidSample/SIPSample_AndroidStudio`
+- Build module `SIPSample`
+
+Login screen moi da co:
+
+- Backend URL (Vercel domain)
+- Email/Username/Password
+- SIP fields
+- Nhan `Register App Account` de tao account (luu DB)
+- Nhan `Login + Register SIP` de login backend va register PortSIP
+- Nhan `Logout` de un-register SIP + logout backend
+
+Tab Call:
+
+- Nhap SIP user (vd `1002`) hoac SIP URI day du
+- App tu noi them domain de goi: `sip:<user>@<domain>`
+
+## 2) Deploy backend stack
 
 - Runtime: Vercel Serverless Functions (`api/**/*.ts`)
 - Database: Neon Postgres (tren Vercel)
 - SIP: PortSIP (client Android su dung PortSIP SDK, backend cap SIP config)
 
-## 2) Tao DB schema
-
-Chay file `db/schema.sql` tren Neon SQL Editor.
+Chay file `db/schema.sql` tren Neon SQL Editor truoc.
 
 ## 3) ENV tren Vercel
 
@@ -56,10 +80,10 @@ Them cac bien:
 
 ## 6) Goi y toi gian UI
 
-Ban co the giu 3 man hinh:
+Ban co the giu 3 man hinh chinh:
 
 - Login screen (`ng_nh_p`)
-- Contact list / chat list de chon user (`tin_nh_n` hoac `h_i_tho_i` rut gon)
-- Call screen (`c_nh_n`)
+- Contact list / chat list de chon user (neu can)
+- Call screen (`c_nh_n` tuong ung tab Call)
 
 Bo cac tinh nang khong can thiet: image message, video call, story, attachments.

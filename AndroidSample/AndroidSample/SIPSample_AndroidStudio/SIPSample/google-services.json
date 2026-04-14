@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "873828181274",
+    "project_id": "sipsample-c3789",
+    "storage_bucket": "sipsample-c3789.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:873828181274:android:d8fe9d28fafd0fae5478a3",
+        "android_client_info": {
+          "package_name": "com.portsip.sipsample"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsq4VahAruiG0dfunN1nCNpLgL7rS__nY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
