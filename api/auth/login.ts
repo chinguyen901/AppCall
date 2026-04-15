@@ -4,7 +4,7 @@ import { z } from "zod";
 import { signAccessToken } from "../../lib/auth.js";
 import { sql } from "../../lib/db.js";
 import { badMethod, json, readBody } from "../../lib/http.js";
-import { buildSipConfig } from "../../lib/portsip.js";
+import { getStreamApiKey, getStreamToken, upsertStreamUser } from "../../lib/stream.js";
 
 const loginSchema = z.object({
   identifier: z.string().min(1),
@@ -25,11 +25,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         username: string;
         display_name: string;
         password_hash: string;
-        sip_username: string;
-        sip_password: string;
+        stream_user_id: string;
       }[]
     >`
-      SELECT id, email, username, display_name, password_hash, sip_username, sip_password
+      SELECT id, email, username, display_name, password_hash, stream_user_id
       FROM users
       WHERE email = ${body.identifier} OR username = ${body.identifier}
       LIMIT 1
@@ -48,6 +47,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     `;
 
     const sessionId = sessionRows[0].id;
+    await upsertStreamUser({
+      id: user.stream_user_id,
+      name: user.display_name,
+    });
     const accessToken = signAccessToken({
       sub: user.id,
       sessionId,
@@ -61,11 +64,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         username: user.username,
         displayName: user.display_name,
       },
-      sip: buildSipConfig({
-        sipUsername: user.sip_username,
-        sipPassword: user.sip_password,
-        displayName: user.display_name,
-      }),
+      stream: {
+        apiKey: getStreamApiKey(),
+        userId: user.stream_user_id,
+        userName: user.display_name,
+        token: getStreamToken(user.stream_user_id),
+      },
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

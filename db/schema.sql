@@ -6,8 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   display_name TEXT NOT NULL,
-  sip_username TEXT UNIQUE NOT NULL,
-  sip_password TEXT NOT NULL,
+  stream_user_id TEXT UNIQUE NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -24,8 +23,9 @@ CREATE TABLE IF NOT EXISTS call_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   caller_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   callee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  call_type TEXT NOT NULL CHECK (call_type IN ('audio')),
+  call_type TEXT NOT NULL CHECK (call_type IN ('audio', 'video')),
   status TEXT NOT NULL CHECK (status IN ('ringing', 'answered', 'ended', 'missed')),
+  stream_call_id TEXT,
   started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   ended_at TIMESTAMPTZ,
   ended_reason TEXT

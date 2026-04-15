@@ -11,8 +11,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const query = typeof req.query.q === "string" ? req.query.q : "";
 
-  const users = await sql<{ id: string; username: string; display_name: string }[]>`
-    SELECT id, username, display_name
+  const users = await sql<{ id: string; username: string; display_name: string; stream_user_id: string }[]>`
+    SELECT id, username, display_name, stream_user_id
     FROM users
     WHERE id <> ${auth.user.id}
       AND (${`%${query}%`} = '%%' OR username ILIKE ${`%${query}%`} OR display_name ILIKE ${`%${query}%`})

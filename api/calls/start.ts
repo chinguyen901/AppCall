@@ -3,10 +3,10 @@ import { z } from "zod";
 import { requireAuth } from "../../lib/auth.js";
 import { sql } from "../../lib/db.js";
 import { badMethod, json, readBody } from "../../lib/http.js";
-import { buildSipConfig } from "../../lib/portsip.js";
 
 const startCallSchema = z.object({
   calleeId: z.string().uuid(),
+  callType: z.enum(["audio", "video"]).default("video"),
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -22,11 +22,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       {
         id: string;
         display_name: string;
-        sip_username: string;
-        sip_password: string;
+        stream_user_id: string;
       }[]
     >`
-      SELECT id, display_name, sip_username, sip_password
+      SELECT id, display_name, stream_user_id
       FROM users
       WHERE id IN (${auth.user.id}, ${body.calleeId})
     `;
@@ -38,9 +37,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return json(res, 404, { error: "Caller or callee not found." });
     }
 
+    const streamCallId = `call_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const callRows = await sql<{ id: string; started_at: string }[]>`
-      INSERT INTO call_sessions (caller_id, callee_id, call_type, status, started_at)
-      VALUES (${caller.id}, ${callee.id}, 'audio', 'ringing', NOW())
+      INSERT INTO call_sessions (caller_id, callee_id, call_type, status, stream_call_id, started_at)
+      VALUES (${caller.id}, ${callee.id}, ${body.callType}, 'ringing', ${streamCallId}, NOW())
       RETURNING id, started_at
     `;
 
@@ -49,16 +49,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return json(res, 201, {
       callId: call.id,
       startedAt: call.started_at,
-      callerSip: buildSipConfig({
-        sipUsername: caller.sip_username,
-        sipPassword: caller.sip_password,
-        displayName: caller.display_name,
-      }),
-      calleeSip: buildSipConfig({
-        sipUsername: callee.sip_username,
-        sipPassword: callee.sip_password,
-        displayName: callee.display_name,
-      }),
+      stream: {
+        callId: streamCallId,
+        callType: body.callType,
+        callerUserId: caller.stream_user_id,
+        calleeUserId: callee.stream_user_id,
+      },
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
