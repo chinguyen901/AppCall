@@ -1,0 +1,56 @@
+services:
+  kamailio:
+    build: ./docker/kamailio
+    container_name: kamailio
+    ports:
+      - "5060:5060/udp"
+    depends_on:
+      - asterisk1
+      - asterisk2
+    networks:
+      - sipnet
+    healthcheck:
+      test: ["CMD-SHELL", "kamailio -c -f /etc/kamailio/kamailio.cfg"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  asterisk1:
+    image: andrius/asterisk:18
+    container_name: asterisk1
+    hostname: asterisk1
+    volumes:
+      - ./docker/asterisk1/pjsip.conf:/etc/asterisk/pjsip.conf:ro
+      - ./docker/asterisk1/extensions.conf:/etc/asterisk/extensions.conf:ro
+    ports:
+      - "15060:5060/udp"
+      - "10000-11000:10000-11000/udp"
+    networks:
+      - sipnet
+    healthcheck:
+      test: ["CMD-SHELL", "asterisk -rx 'core show uptime' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  asterisk2:
+    image: andrius/asterisk:18
+    container_name: asterisk2
+    hostname: asterisk2
+    volumes:
+      - ./docker/asterisk2/pjsip.conf:/etc/asterisk/pjsip.conf:ro
+      - ./docker/asterisk2/extensions.conf:/etc/asterisk/extensions.conf:ro
+    ports:
+      - "15061:5060/udp"
+      - "11001-12000:10000-11000/udp"
+    networks:
+      - sipnet
+    healthcheck:
+      test: ["CMD-SHELL", "asterisk -rx 'core show uptime' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  sipnet:
+    driver: bridge

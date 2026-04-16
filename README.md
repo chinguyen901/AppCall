@@ -1,81 +1,87 @@
-# AppCall Demo (Android + Vercel + Neon + Stream)
+# AppCall - PortSIP + Kamailio + Multi-Asterisk
 
-Demo MVP cho app Android chat + call theo flow:
+Complete VoIP system:
 
-- Login
-- Chon user de goi
-- Start call (Stream)
-- End call
-- Logout
+- Android app uses PortSIP SDK
+- SIP registration goes to Kamailio proxy
+- Kamailio routes to registered users or load-balances to Asterisk pool
+- Asterisk handles PBX/media
 
-## Android project de build app
+## Architecture
 
-- Mo Android Studio tai: `xxxxx/AndroidSample/SIPSample_AndroidStudio`
-- Tai day da co:
-  - Stream auth token flow
-  - Flow register/login qua backend Vercel
-  - Flow chat/call qua Stream
-  - UI preview nhung tu thu muc `UI`
+Mobile App -> Kamailio -> Asterisk1/Asterisk2
 
-Tai lieu Android chi tiet: `xxxxx/AndroidSample/SIPSample_AndroidStudio/README_APP_DEMO.md`
+## Android Components
 
-## 1) Backend deploy stack
+- `LoginActivity`: SIP login via username/password/domain/proxy
+- `MainActivity`: user list + SIP status indicators
+- `CallActivity`: outgoing/incoming call controls
+- `SIPManager`: register/unregister/call/answer/reject/end + retry + logs
+- `SIPStateObserver`: `StateFlow` for Online/Busy/Connecting/Offline
 
-- Runtime: Vercel Serverless Functions (`api/**/*.ts`)
-- Database: Neon Postgres (tren Vercel)
-- Realtime: Stream Chat + Stream Video
+## Container Files
 
-## 2) Tao DB schema
+- `docker-compose.yml`
+- `podman-compose.yml`
+- `docker/kamailio/kamailio.cfg`
+- `docker/kamailio/dispatcher.list`
+- `docker/asterisk1/pjsip.conf`
+- `docker/asterisk1/extensions.conf`
+- `docker/asterisk2/pjsip.conf`
+- `docker/asterisk2/extensions.conf`
 
-Chay file `db/schema.sql` tren Neon SQL Editor.
+## Run SIP Infrastructure (Podman recommended)
 
-## 3) ENV tren Vercel
+### Podman (recommended)
 
-Them cac bien:
+1. Start containers:
+   - `.\scripts\podman-up.ps1 -Build`
+2. Check health:
+   - `podman compose -f podman-compose.yml ps`
+3. Watch Kamailio logs:
+   - `.\scripts\podman-logs.ps1 -Service kamailio`
 
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `STREAM_API_KEY`
-- `STREAM_API_SECRET`
+Detailed steps:
+- `PODMAN_SETUP.md`
 
-## 4) API chinh
+### Docker (optional)
 
-- `POST /api/auth/register`
-  - Tao account va Stream user mapping.
-- `POST /api/auth/login`
-  - Tra ve `accessToken` + `stream` token de Android/WebView connect Stream.
-- `GET /api/auth/me`
-- `POST /api/auth/logout`
-- `GET /api/users?q=...`
-  - Lay danh sach user de hien thi man hinh chon nguoi goi.
-- `POST /api/calls/start`
-  - Body: `{ "calleeId": "<uuid>", "callType": "audio|video" }`
-  - Tra ve `stream.callId` de join call.
-- `POST /api/calls/end`
-  - Body: `{ "callId": "<uuid>", "reason": "hangup" }`
+- `docker-compose up -d`
 
-## 5) Luong chat/call voi Stream (Android)
+## Android Setup
 
-1. Login backend (`/api/auth/login`) -> nhan `stream.apiKey`, `stream.userId`, `stream.token`.
-2. Android/WebView connect Stream Chat.
-3. Khi user bam call/video:
-   - Goi `/api/calls/start` de tao call session.
-   - Join Stream Call bang `stream.callId`.
-4. Ket thuc call -> goi `/api/calls/end`.
-5. Logout -> goi `/api/auth/logout`.
+1. Place PortSIP AAR:
+   - `app/libs/portsip_voip_sdk.aar`
+2. Open project in Android Studio
+3. Sync Gradle and run app
+4. Login with sample users:
+   - `1001 / 123456`
+   - `1002 / 123456`
+5. Use Kamailio endpoint in app:
+   - Domain: `kamailio` (same Docker network) or host IP
+   - Proxy: `sip:kamailio:5060` or `sip:<HOST_IP>:5060`
+   - Default preconfigured in app:
+     - Domain: `192.168.2.2`
+     - Proxy: `sip:192.168.2.2:5060`
 
-## 6) Tach backend de tao repo rieng cho Vercel
+## SIP Status Mapping
 
-Tai lieu tach repo backend:
+- Registered -> Online (Green)
+- Calling/Ringing/Registering -> Connecting (Yellow)
+- In call -> Busy (Red)
+- Register failed/Unregistered -> Offline (Gray)
 
-- `backend-vercel/README_BACKEND_REPO.md`
+## Notes
 
-## 7) Goi y toi gian UI
+- SIP transport: UDP 5060
+- STUN: `stun.l.google.com:19302`
+- Codec: PCMU (G.711 u-law)
+- All SIP signaling should go through Kamailio, not directly to Asterisk
 
-Ban co the giu 3 man hinh:
+## Test Scenario
 
-- Login screen (`ng_nh_p`)
-- Contact list / chat list de chon user (`tin_nh_n` hoac `h_i_tho_i` rut gon)
-- Call screen (`c_nh_n`)
-
-Bo cac tinh nang khong can thiet: image message, video call, story, attachments.
+1. Run container stack (`Podman` or `Docker`)
+2. Open app on 2 devices
+3. Register 1001 and 1002 to Kamailio
+4. Call `sip:1002@<domain>` from 1001
+5. Verify ringing, connect, audio, and status changes
