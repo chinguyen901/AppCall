@@ -10,6 +10,8 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.portsip.OnPortSIPEvent
+import com.portsip.PortSipEnumDefine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -29,6 +31,7 @@ object SIPManager {
     private const val SIP_PORT = 5060
     private const val STUN_SERVER = "stun.l.google.com"
     private const val STUN_PORT = 19302
+    private const val PORTSIP_ALLOW_ONLY_ONE_USER = -60095
     private const val INCOMING_CHANNEL_ID = "incoming_call_channel"
     private const val INCOMING_NOTIFICATION_ID = 2001
 
@@ -43,6 +46,7 @@ object SIPManager {
     private var currentPassword: String = ""
     private var currentProxy: String = ""
     private var lastRemoteUser: String? = null
+    private var isRegistered = false
     private var registerRetryJob: Job? = null
     private val sipScope = CoroutineScope(Dispatchers.IO)
 
@@ -59,21 +63,26 @@ object SIPManager {
         routeAudioToEarpiece()
 
         if (portSipSdk == null) {
-            portSipSdk = com.portsip.PortSipSdk()
+            portSipSdk = com.portsip.PortSipSdk(appContext)
             // Transport: UDP, SIP Port: 5060.
             // Keep this call aligned with your SDK initialize signature.
             val initResult = portSipSdk?.initialize(
-                com.portsip.PortSipEnumDefine.ENUM_TRANSPORT_UDP,
+                PortSipEnumDefine.ENUM_TRANSPORT_UDP,
                 "0.0.0.0",
                 SIP_PORT,
-                "AppCall-UA",
                 0,
                 "logs",
-                5
+                5,
+                "AppCall-UA",
+                0,
+                0,
+                "",
+                "",
+                false,
+                ""
             ) ?: -1
             Log.d(TAG, "PortSIP initialize result=$initResult")
             configureCodecs()
-            configureStun()
             setListener()
         }
     }
@@ -93,55 +102,89 @@ object SIPManager {
         currentPassword = password
         currentDomain = safeDomain
         currentProxy = safeProxy
+        isRegistered = false
         _registrationState.value = "Registering..."
         SIPStateObserver.updateSelfStatus(UserSipStatus.CONNECTING, currentUser)
         Log.d(TAG, "register() start user=$currentUser domain=$currentDomain proxy=$currentProxy")
         registerRetryJob?.cancel()
 
-        // Avoid stale registration/session on re-login.
-        runCatching { portSipSdk?.unRegisterServer() }
+        // Avoid stale registration/session on re-login/retry.
+        runCatching {
+            portSipSdk?.unRegisterServer(100)
+            portSipSdk?.removeUser()
+        }
 
-        // Keep setUser/registerServer argument order aligned with your SDK version.
-        val userOk = portSipSdk?.setUser(
+        val (sipServerHost, sipServerPort) = parseProxyEndpoint(currentProxy, currentDomain)
+
+        // setUser(userName, displayName, authName, password, userDomain, SIPServer, SIPServerPort, STUNServer, STUNServerPort, outboundServer, outboundServerPort)
+        var userOk = portSipSdk?.setUser(
             currentUser,
-            "",
-            "",
+            currentUser,
+            currentUser,
             currentPassword,
-            currentUser,
-            0,
             currentDomain,
-            SIP_PORT
+            sipServerHost,
+            sipServerPort,
+            STUN_SERVER,
+            STUN_PORT,
+            "",
+            0
         ) ?: -1
+
+        // PortSIP allows only one configured user in sdk state.
+        if (userOk == PORTSIP_ALLOW_ONLY_ONE_USER) {
+            Log.w(TAG, "setUser returned AllowOnlyOneUser, resetting previous user state")
+            runCatching { portSipSdk?.removeUser() }
+            userOk = portSipSdk?.setUser(
+                currentUser,
+                currentUser,
+                currentUser,
+                currentPassword,
+                currentDomain,
+                sipServerHost,
+                sipServerPort,
+                STUN_SERVER,
+                STUN_PORT,
+                "",
+                0
+            ) ?: -1
+        }
 
         if (userOk != 0) {
             _registrationState.value = "setUser failed: $userOk"
             SIPStateObserver.updateSelfStatus(UserSipStatus.OFFLINE, currentUser)
-            Log.e(TAG, "setUser failed code=$userOk user=$currentUser domain=$currentDomain")
+            Log.e(
+                TAG,
+                "setUser failed code=$userOk user=$currentUser domain=$currentDomain sipServer=$sipServerHost:$sipServerPort"
+            )
             scheduleRegisterRetry()
             return
         }
 
         val registerOk = portSipSdk?.registerServer(
-            currentDomain,
-            SIP_PORT,
-            currentProxy,
-            "",
-            "",
-            30,
+            90,
             0
         ) ?: -1
 
-        _registrationState.value = if (registerOk == 0) "Registered" else "Register failed: $registerOk"
-        SIPStateObserver.updateSelfStatus(
-            if (registerOk == 0) UserSipStatus.ONLINE else UserSipStatus.OFFLINE,
-            currentUser
+        // registerServer()==0 only means the SDK queued/sent REGISTER — not SIP 200 OK.
+        // Real success is onRegisterSuccess(); until then isRegistered stays false and makeCall is blocked.
+        if (registerOk == 0) {
+            _registrationState.value = "Registering... (waiting for server)"
+            SIPStateObserver.updateSelfStatus(UserSipStatus.CONNECTING, currentUser)
+        } else {
+            _registrationState.value = "Register failed: $registerOk"
+            SIPStateObserver.updateSelfStatus(UserSipStatus.OFFLINE, currentUser)
+            scheduleRegisterRetry()
+        }
+        Log.d(
+            TAG,
+            "registerServer result=$registerOk user=$currentUser domain=$currentDomain sipServer=$sipServerHost:$sipServerPort"
         )
-        Log.d(TAG, "registerServer result=$registerOk user=$currentUser domain=$currentDomain")
-        if (registerOk != 0) scheduleRegisterRetry()
     }
 
     fun unregister() {
-        portSipSdk?.unRegisterServer()
+        portSipSdk?.unRegisterServer(0)
+        isRegistered = false
         _registrationState.value = "Unregistered"
         _callState.value = "Idle"
         SIPStateObserver.updateSelfStatus(UserSipStatus.OFFLINE, currentUser)
@@ -151,6 +194,11 @@ object SIPManager {
     }
 
     fun makeCall(targetSip: String) {
+        if (!isRegistered) {
+            _callState.value = "Cannot call: SIP not registered"
+            Log.w(TAG, "makeCall() blocked: SIP not registered")
+            return
+        }
         if (currentDomain.isBlank()) return
         routeAudioToSpeaker()
         val destination = if (targetSip.contains("@")) targetSip else "$targetSip@$currentDomain"
@@ -224,39 +272,47 @@ object SIPManager {
         Log.d(TAG, "Audio routed to earpiece")
     }
 
-    private fun configureStun() {
-        // Keep aligned with your SDK method name/signature.
-        portSipSdk?.setLocalServerAddress(
-            STUN_SERVER,
-            STUN_PORT,
-            "",
-            "",
-            0
-        )
-    }
-
     private fun configureCodecs() {
         // Enable G.711 u-law (PCMU) only for this minimal sample.
         portSipSdk?.clearAudioCodec()
-        portSipSdk?.addAudioCodec(com.portsip.PortSipEnumDefine.ENUM_AUDIOCODEC_PCMU)
+        portSipSdk?.addAudioCodec(PortSipEnumDefine.ENUM_AUDIOCODEC_PCMU)
     }
 
     private fun setListener() {
-        portSipSdk?.setListener(object : com.portsip.OnPortSIPEvent {
-            override fun onRegisterSuccess(statusText: String?, statusCode: Int) {
+        portSipSdk?.setOnPortSIPEvent(object : OnPortSIPEvent {
+            override fun onRegisterSuccess(statusText: String?, statusCode: Int, statusDescription: String?) {
+                isRegistered = true
+                registerRetryJob?.cancel()
+                registerRetryJob = null
                 _registrationState.value = "Registered ($statusCode)"
                 SIPStateObserver.updateSelfStatus(UserSipStatus.ONLINE, currentUser)
-                Log.i(TAG, "onRegisterSuccess code=$statusCode text=$statusText")
+                Log.i(TAG, "onRegisterSuccess code=$statusCode text=$statusText desc=$statusDescription")
             }
 
-            override fun onRegisterFailure(statusText: String?, statusCode: Int) {
-                _registrationState.value = "Register failed ($statusCode)"
+            override fun onRegisterFailure(statusText: String?, statusCode: Int, statusDescription: String?) {
+                isRegistered = false
+                _registrationState.value = if (statusCode == 408) {
+                    "Register timeout (408): cannot reach SIP server"
+                } else {
+                    "Register failed ($statusCode)"
+                }
                 SIPStateObserver.updateSelfStatus(UserSipStatus.OFFLINE, currentUser)
-                Log.e(TAG, "onRegisterFailure code=$statusCode text=$statusText")
+                Log.e(TAG, "onRegisterFailure code=$statusCode text=$statusText desc=$statusDescription")
                 scheduleRegisterRetry()
             }
 
-            override fun onInviteIncoming(sessionId: Long, caller: String?, callerDisplayName: String?) {
+            override fun onInviteIncoming(
+                sessionId: Long,
+                caller: String?,
+                callerDisplayName: String?,
+                callee: String?,
+                calleeDisplayName: String?,
+                audioCodecs: String?,
+                videoCodecs: String?,
+                existsAudio: Boolean,
+                existsVideo: Boolean,
+                sipMessage: String?
+            ) {
                 currentSessionId = sessionId
                 _callState.value = "Incoming: ${caller ?: "Unknown"}"
                 lastRemoteUser = caller?.substringAfter("sip:")?.substringBefore("@")
@@ -272,22 +328,133 @@ object SIPManager {
                 Log.d(TAG, "onInviteTrying session=$sessionId")
             }
 
-            override fun onInviteAnswered(sessionId: Long, statusText: String?, statusCode: Int) {
+            override fun onInviteSessionProgress(
+                p0: Long,
+                p1: String?,
+                p2: String?,
+                p3: Boolean,
+                p4: Boolean,
+                p5: Boolean,
+                p6: String?
+            ) = Unit
+
+            override fun onInviteRinging(p0: Long, p1: String?, p2: Int, p3: String?) = Unit
+
+            override fun onInviteAnswered(
+                sessionId: Long,
+                caller: String?,
+                callerDisplayName: String?,
+                callee: String?,
+                calleeDisplayName: String?,
+                audioCodecs: String?,
+                videoCodecs: String?,
+                existsAudio: Boolean,
+                existsVideo: Boolean,
+                sipMessage: String?
+            ) {
                 _callState.value = "Connected"
                 SIPStateObserver.updateSelfStatus(UserSipStatus.BUSY, currentUser)
                 SIPStateObserver.updateUserStatus(lastRemoteUser, UserSipStatus.BUSY)
-                Log.i(TAG, "onInviteAnswered session=$sessionId code=$statusCode text=$statusText")
+                Log.i(TAG, "onInviteAnswered session=$sessionId caller=$caller callee=$callee")
             }
 
-            override fun onInviteClosed(sessionId: Long) {
+            override fun onInviteFailure(
+                p0: Long,
+                p1: String?,
+                p2: String?,
+                p3: String?,
+                p4: String?,
+                p5: String?,
+                p6: Int,
+                p7: String?
+            ) = Unit
+
+            override fun onInviteUpdated(
+                p0: Long,
+                p1: String?,
+                p2: String?,
+                p3: String?,
+                p4: Boolean,
+                p5: Boolean,
+                p6: Boolean,
+                p7: String?
+            ) = Unit
+
+            override fun onInviteConnected(p0: Long) = Unit
+            override fun onInviteBeginingForward(p0: String?) = Unit
+
+            override fun onInviteClosed(sessionId: Long, reason: String?) {
                 _callState.value = "Call ended"
                 currentSessionId = -1
                 SIPStateObserver.updateSelfStatus(UserSipStatus.ONLINE, currentUser)
                 SIPStateObserver.updateUserStatus(lastRemoteUser, UserSipStatus.ONLINE)
                 routeAudioToEarpiece()
                 NotificationManagerCompat.from(appContext).cancel(INCOMING_NOTIFICATION_ID)
-                Log.i(TAG, "onInviteClosed session=$sessionId")
+                Log.i(TAG, "onInviteClosed session=$sessionId reason=$reason")
             }
+
+            override fun onDialogStateUpdated(p0: String?, p1: String?, p2: String?, p3: String?) = Unit
+            override fun onRemoteHold(p0: Long) = Unit
+            override fun onRemoteUnHold(p0: Long, p1: String?, p2: String?, p3: Boolean, p4: Boolean) = Unit
+            override fun onReceivedRefer(p0: Long, p1: Long, p2: String?, p3: String?, p4: String?) = Unit
+            override fun onReferAccepted(p0: Long) = Unit
+            override fun onReferRejected(p0: Long, p1: String?, p2: Int) = Unit
+            override fun onTransferTrying(p0: Long) = Unit
+            override fun onTransferRinging(p0: Long) = Unit
+            override fun onACTVTransferSuccess(p0: Long) = Unit
+            override fun onACTVTransferFailure(p0: Long, p1: String?, p2: Int) = Unit
+            override fun onReceivedSignaling(p0: Long, p1: String?) = Unit
+            override fun onSendingSignaling(p0: Long, p1: String?) = Unit
+            override fun onWaitingVoiceMessage(p0: String?, p1: Int, p2: Int, p3: Int, p4: Int) = Unit
+            override fun onWaitingFaxMessage(p0: String?, p1: Int, p2: Int, p3: Int, p4: Int) = Unit
+            override fun onRecvDtmfTone(p0: Long, p1: Int) = Unit
+            override fun onRecvOptions(p0: String?) = Unit
+            override fun onRecvInfo(p0: String?) = Unit
+            override fun onRecvNotifyOfSubscription(p0: Long, p1: String?, p2: ByteArray?, p3: Int) = Unit
+            override fun onPresenceRecvSubscribe(p0: Long, p1: String?, p2: String?, p3: String?) = Unit
+            override fun onPresenceOnline(p0: String?, p1: String?, p2: String?) = Unit
+            override fun onPresenceOffline(p0: String?, p1: String?) = Unit
+            override fun onRecvMessage(p0: Long, p1: String?, p2: String?, p3: ByteArray?, p4: Int) = Unit
+            override fun onRecvOutOfDialogMessage(
+                p0: String?,
+                p1: String?,
+                p2: String?,
+                p3: String?,
+                p4: String?,
+                p5: String?,
+                p6: ByteArray?,
+                p7: Int,
+                p8: String?
+            ) = Unit
+            override fun onSendMessageSuccess(p0: Long, p1: Long, p2: String?) = Unit
+            override fun onSendMessageFailure(p0: Long, p1: Long, p2: String?, p3: Int, p4: String?) = Unit
+            override fun onSendOutOfDialogMessageSuccess(
+                p0: Long,
+                p1: String?,
+                p2: String?,
+                p3: String?,
+                p4: String?,
+                p5: String?
+            ) = Unit
+            override fun onSendOutOfDialogMessageFailure(
+                p0: Long,
+                p1: String?,
+                p2: String?,
+                p3: String?,
+                p4: String?,
+                p5: String?,
+                p6: Int,
+                p7: String?
+            ) = Unit
+            override fun onSubscriptionFailure(p0: Long, p1: Int) = Unit
+            override fun onSubscriptionTerminated(p0: Long) = Unit
+            override fun onPlayFileFinished(p0: Long, p1: String?) = Unit
+            override fun onStatistics(p0: Long, p1: String?) = Unit
+            override fun onAudioDeviceChanged(p0: PortSipEnumDefine.AudioDevice?, p1: MutableSet<PortSipEnumDefine.AudioDevice>?) = Unit
+            override fun onAudioFocusChange(p0: Int) = Unit
+            override fun onRTPPacketCallback(p0: Long, p1: Int, p2: Int, p3: ByteArray?, p4: Int) = Unit
+            override fun onAudioRawCallback(p0: Long, p1: Int, p2: ByteArray?, p3: Int, p4: Int) = Unit
+            override fun onVideoRawCallback(p0: Long, p1: Int, p2: Int, p3: Int, p4: ByteArray?, p5: Int) = Unit
         })
     }
 
@@ -342,5 +509,15 @@ object SIPManager {
             Log.w(TAG, "Retrying SIP register...")
             register(currentUser, currentPassword, currentDomain, currentProxy)
         }
+    }
+
+    private fun parseProxyEndpoint(proxy: String, fallbackDomain: String): Pair<String, Int> {
+        val raw = proxy.trim().removePrefix("sip:").removePrefix("sips:")
+        if (raw.isBlank()) return fallbackDomain to SIP_PORT
+
+        val hostPort = raw.substringBefore(";").substringBefore("?")
+        val host = hostPort.substringBefore(":").ifBlank { fallbackDomain }
+        val port = hostPort.substringAfter(":", SIP_PORT.toString()).toIntOrNull() ?: SIP_PORT
+        return host to port
     }
 }

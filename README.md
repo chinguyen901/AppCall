@@ -46,7 +46,13 @@ Detailed steps:
 
 ### Docker (optional)
 
-- `docker-compose up -d`
+- `docker compose up -d`
+- Kamailio image is built from `./docker/kamailio`; after changing `kamailio.cfg`, rebuild:
+  - `docker compose build kamailio && docker compose up -d kamailio`
+- If the `kamailio` container exits immediately (`ExitCode: 255`), inspect the reason:
+  - `docker logs kamailio --tail 200`
+  - `docker compose run --rm --no-deps kamailio kamailio -c -f /etc/kamailio/kamailio.cfg`
+- Published SIP port in `docker-compose.yml` is **5065** → use `sip:<HOST_LAN_IP>:5065` in the Android app (not `5060` unless you change the mapping).
 
 ## Android Setup
 

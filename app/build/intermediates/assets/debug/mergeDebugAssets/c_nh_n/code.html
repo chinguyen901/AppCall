@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#eceef1",
+                    "on-primary": "#ffffff",
+                    "background": "#f7f9fc",
+                    "on-tertiary-fixed": "#341100",
+                    "surface-container-highest": "#e0e3e6",
+                    "inverse-surface": "#2d3133",
+                    "on-error": "#ffffff",
+                    "secondary-fixed-dim": "#a9c7ff",
+                    "on-background": "#191c1e",
+                    "on-secondary-fixed-variant": "#264778",
+                    "inverse-primary": "#a9c7ff",
+                    "tertiary": "#9a4100",
+                    "surface-dim": "#d8dadd",
+                    "outline": "#717786",
+                    "surface-bright": "#f7f9fc",
+                    "primary-fixed": "#d6e3ff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#414754",
+                    "surface-tint": "#005db7",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "error": "#ba1a1a",
+                    "on-tertiary-container": "#fffbff",
+                    "on-tertiary-fixed-variant": "#783100",
+                    "on-error-container": "#93000a",
+                    "outline-variant": "#c0c6d6",
+                    "on-primary-fixed": "#001b3d",
+                    "on-primary-fixed-variant": "#00468c",
+                    "inverse-on-surface": "#eff1f4",
+                    "secondary": "#3f5f91",
+                    "surface-container-high": "#e6e8eb",
+                    "on-surface": "#191c1e",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed": "#d6e3ff",
+                    "on-primary-container": "#fefcff",
+                    "error-container": "#ffdad6",
+                    "surface-variant": "#e0e3e6",
+                    "on-secondary-fixed": "#001b3d",
+                    "primary": "#005bb3",
+                    "tertiary-container": "#c15300",
+                    "on-secondary-container": "#315182",
+                    "tertiary-fixed": "#ffdbcb",
+                    "primary-container": "#0073df",
+                    "secondary-container": "#a6c5fd",
+                    "on-secondary": "#ffffff",
+                    "surface": "#f7f9fc",
+                    "tertiary-fixed-dim": "#ffb691",
+                    "surface-container-low": "#f2f4f7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Be Vietnam Pro"],
+                    "body": ["Be Vietnam Pro"],
+                    "label": ["Be Vietnam Pro"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-shift-no-lines { border: none !important; }
+        .flat-no-shadows { box-shadow: none !important; }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen">
+
+    <header class="fixed top-0 w-full z-50 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-xl flex justify-between items-center px-4 py-2 w-full tonal-shift-no-lines flat-no-shadows">
+        <div class="flex items-center gap-3">
+            <button class="w-10 h-10 flex items-center justify-center hover:bg-slate-200/50 rounded-full transition-colors active:scale-95 duration-200">
+                <span class="material-symbols-outlined text-on-surface-variant">arrow_back</span>
+            </button>
+            <h1 class="font-be-vietnam-pro title-lg font-bold text-on-surface">Profile</h1>
+        </div>
+        <button class="w-10 h-10 flex items-center justify-center hover:bg-slate-200/50 rounded-full transition-colors active:scale-95 duration-200">
+            <span class="material-symbols-outlined text-blue-600">edit</span>
+        </button>
+    </header>
+
+    <main class="pt-20 pb-24 px-6 max-w-2xl mx-auto">
+        <section class="flex flex-col items-center mb-10 text-center">
+            <div class="relative group">
+                <div class="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-primary to-secondary-container">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&h=256&auto=format&fit=crop" 
+                         alt="User Profile" 
+                         data-alt="Close-up portrait of a stylish young woman with a warm expression, soft natural lighting, editorial photography style"
+                         class="w-full h-full object-cover rounded-full border-4 border-surface">
+                </div>
+                <div class="absolute bottom-1 right-1 w-8 h-8 bg-primary rounded-full border-2 border-surface flex items-center justify-center shadow-lg">
+                    <span class="material-symbols-outlined text-on-primary text-sm" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <h2 class="text-2xl font-bold tracking-tight text-on-surface">Alex Thompson</h2>
+                <p class="text-on-surface-variant font-medium">@alex.stream</p>
+            </div>
+        </section>
+
+        <section class="space-y-3">
+            <div class="bg-surface-container-low rounded-lg p-1">
+                <button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-high rounded-lg transition-colors group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">dark_mode</span>
+                        </div>
+                        <span class="font-semibold text-on-surface">Dark mode</span>
+                    </div>
+                    <div class="w-12 h-6 bg-surface-container-highest rounded-full relative p-1 flex items-center">
+                        <div class="w-4 h-4 bg-on-surface-variant rounded-full"></div>
+                    </div>
+                </button>
+
+                <button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-high rounded-lg transition-colors group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">lock</span>
+                        </div>
+                        <span class="font-semibold text-on-surface">Privacy</span>
+                    </div>
+                    <span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+                </button>
+
+                <button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-high rounded-lg transition-colors group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">notifications</span>
+                        </div>
+                        <span class="font-semibold text-on-surface">Notifications</span>
+                    </div>
+                    <span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+                </button>
+            </div>
+
+            <div class="bg-surface-container-low rounded-lg p-1">
+                <button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-high rounded-lg transition-colors group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">help_outline</span>
+                        </div>
+                        <span class="font-semibold text-on-surface">Help Center</span>
+                    </div>
+                    <span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+                </button>
+
+                <button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-high rounded-lg transition-colors group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">info</span>
+                        </div>
+                        <span class="font-semibold text-on-surface">About</span>
+                    </div>
+                    <span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+                </button>
+            </div>
+        </section>
+
+        <section class="mt-10">
+            <button class="w-full h-14 bg-error-container text-on-error-container font-bold rounded-full active:scale-[0.98] transition-transform duration-200 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">logout</span>
+                Log Out
+            </button>
+            <p class="text-center text-on-surface-variant/40 label-sm mt-8 font-medium">Version 4.12.0 (Premium)</p>
+        </section>
+    </main>
+
+    <nav class="fixed bottom-0 w-full z-50 pb-safe bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-xl flex justify-around items-center h-16 w-full px-6 tonal-shift-no-lines flat-no-shadows">
+        <button class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 w-12 h-12 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-full transition-colors active:scale-90 duration-200">
+            <span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+        </button>
+        <button class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 w-12 h-12 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-full transition-colors active:scale-90 duration-200">
+            <span class="material-symbols-outlined" data-icon="group">group</span>
+        </button>
+        <button class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 w-12 h-12 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-full transition-colors active:scale-90 duration-200">
+            <span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+        </button>
+        <button class="flex flex-col items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200 rounded-full w-12 h-12 active:scale-90 transition-transform duration-200">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+        </button>
+    </nav>
+
+</body>
+</html></style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body></body></html>

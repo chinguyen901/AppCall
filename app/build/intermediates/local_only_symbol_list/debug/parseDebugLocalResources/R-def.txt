@@ -1,0 +1,24 @@
+R_DEF: Internal format may change without notice
+local
+id btnAccept
+id btnCall
+id btnEndCall
+id btnLogin
+id btnLogout
+id btnOpenCallScreen
+id btnReject
+id etCallee
+id etDomain
+id etPassword
+id etProxy
+id etUsername
+id incomingLayout
+id listUsers
+id tvCallStatus
+id tvSelfStatus
+id tvStatus
+layout activity_call
+layout activity_login
+layout activity_main
+string app_name
+style Theme.AppCall

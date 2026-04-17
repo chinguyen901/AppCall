@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login - Messenger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#eceef1",
+                    "on-primary": "#ffffff",
+                    "background": "#f7f9fc",
+                    "on-tertiary-fixed": "#341100",
+                    "surface-container-highest": "#e0e3e6",
+                    "inverse-surface": "#2d3133",
+                    "on-error": "#ffffff",
+                    "secondary-fixed-dim": "#a9c7ff",
+                    "on-background": "#191c1e",
+                    "on-secondary-fixed-variant": "#264778",
+                    "inverse-primary": "#a9c7ff",
+                    "tertiary": "#9a4100",
+                    "surface-dim": "#d8dadd",
+                    "outline": "#717786",
+                    "surface-bright": "#f7f9fc",
+                    "primary-fixed": "#d6e3ff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#414754",
+                    "surface-tint": "#005db7",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "error": "#ba1a1a",
+                    "on-tertiary-container": "#fffbff",
+                    "on-tertiary-fixed-variant": "#783100",
+                    "on-error-container": "#93000a",
+                    "outline-variant": "#c0c6d6",
+                    "on-primary-fixed": "#001b3d",
+                    "on-primary-fixed-variant": "#00468c",
+                    "inverse-on-surface": "#eff1f4",
+                    "secondary": "#3f5f91",
+                    "surface-container-high": "#e6e8eb",
+                    "on-surface": "#191c1e",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed": "#d6e3ff",
+                    "on-primary-container": "#fefcff",
+                    "error-container": "#ffdad6",
+                    "surface-variant": "#e0e3e6",
+                    "on-secondary-fixed": "#001b3d",
+                    "primary": "#005bb3",
+                    "tertiary-container": "#c15300",
+                    "on-secondary-container": "#315182",
+                    "tertiary-fixed": "#ffdbcb",
+                    "primary-container": "#0073df",
+                    "secondary-container": "#a6c5fd",
+                    "on-secondary": "#ffffff",
+                    "surface": "#f7f9fc",
+                    "tertiary-fixed-dim": "#ffb691",
+                    "surface-container-low": "#f2f4f7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Be Vietnam Pro"],
+                    "body": ["Be Vietnam Pro"],
+                    "label": ["Be Vietnam Pro"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-messenger-gradient {
+            background: linear-gradient(135deg, #005bb3 0%, #0073df 100%);
+        }
+        .tonal-shift-no-lines { border: none !important; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-background min-h-screen flex flex-col selection:bg-primary-fixed selection:text-on-primary-fixed">
+<main class="flex-grow flex flex-col items-center justify-center px-6 py-12 max-w-md mx-auto w-full">
+<div class="mb-12 text-center">
+<div class="inline-flex items-center justify-center w-20 h-20 bg-messenger-gradient rounded-xl mb-6 shadow-xl shadow-primary/10">
+<span class="material-symbols-outlined text-white text-5xl" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+</div>
+<h1 class="text-4xl font-extrabold tracking-tight text-on-background mb-2">Connect</h1>
+<p class="text-on-surface-variant font-medium">Log in to your account</p>
+</div>
+<form class="w-full space-y-4">
+<div class="relative">
+<input class="w-full bg-surface-container-highest border-none rounded-full px-6 py-4 text-on-background placeholder:text-on-surface-variant focus:ring-0 focus:bg-surface-container-lowest transition-all duration-300 outline-none group shadow-none focus:shadow-[0px_8px_24px_-4px_rgba(25,28,30,0.06)]" placeholder="Email or Phone" type="text"/>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-highest border-none rounded-full px-6 py-4 text-on-background placeholder:text-on-surface-variant focus:ring-0 focus:bg-surface-container-lowest transition-all duration-300 outline-none group shadow-none focus:shadow-[0px_8px_24px_-4px_rgba(25,28,30,0.06)]" placeholder="Password" type="password"/>
+</div>
+<div class="pt-2">
+<button class="w-full bg-messenger-gradient text-on-primary font-bold py-4 rounded-full shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform duration-200" type="submit">
+                    Log In
+                </button>
+</div>
+<div class="text-center pt-2">
+<a class="text-primary font-semibold text-sm hover:underline decoration-2 underline-offset-4" href="#">
+                    Forgotten password?
+                </a>
+</div>
+</form>
+<div class="w-full flex items-center gap-4 py-8">
+<div class="h-[1px] flex-grow bg-outline-variant/30"></div>
+<span class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">or</span>
+<div class="h-[1px] flex-grow bg-outline-variant/30"></div>
+</div>
+<div class="w-full">
+<button class="w-full bg-surface-container-high text-primary font-bold py-4 rounded-full active:scale-[0.98] transition-transform duration-200" type="button">
+                Create New Account
+            </button>
+</div>
+</main>
+<footer class="mt-auto py-8 px-6 text-center">
+<div class="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-4">
+<a class="text-on-surface-variant text-xs font-medium hover:text-primary transition-colors" href="#">English</a>
+<a class="text-on-surface-variant text-xs font-medium hover:text-primary transition-colors" href="#">Español</a>
+<a class="text-on-surface-variant text-xs font-medium hover:text-primary transition-colors" href="#">Français</a>
+<a class="text-on-surface-variant text-xs font-medium hover:text-primary transition-colors" href="#">Português</a>
+</div>
+<p class="text-on-surface-variant/60 text-[10px] tracking-wide uppercase font-bold">
+            © 2024 Messenger-Style App from Meta-Inspired Design
+        </p>
+</footer>
+<div class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-[-1]">
+<div class="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-secondary-container/10 rounded-full blur-[100px]"></div>
+</div>
+</body></html>

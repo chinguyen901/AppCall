@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "com.appcall.voip.app-debug-36:/layout_activity_login.xml.flat",
+        "source": "com.appcall.voip.app-main-38:/layout/activity_login.xml"
+    },
+    {
+        "merged": "com.appcall.voip.app-debug-36:/layout_activity_call.xml.flat",
+        "source": "com.appcall.voip.app-main-38:/layout/activity_call.xml"
+    },
+    {
+        "merged": "com.appcall.voip.app-debug-36:/layout_activity_main.xml.flat",
+        "source": "com.appcall.voip.app-main-38:/layout/activity_main.xml"
+    }
+]

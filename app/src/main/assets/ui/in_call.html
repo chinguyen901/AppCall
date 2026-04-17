@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>In Call</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #2f2f35 0%, #111217 45%, #0b0c10 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .top { margin-top: 52px; text-align: center; }
+    .name { font-size: 36px; font-weight: 700; letter-spacing: 0.2px; }
+    .timer { margin-top: 8px; font-size: 18px; color: #c8cbd3; }
+    .grid {
+      margin-top: 72px;
+      width: 88%;
+      max-width: 420px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px 14px;
+    }
+    .item { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+    .btn {
+      width: 72px; height: 72px; border-radius: 999px; border: none;
+      background: #2f323b; color: #fff; font-size: 28px; cursor: pointer;
+    }
+    .label { font-size: 16px; color: #c9ccd6; }
+    .end-wrap { margin-top: auto; margin-bottom: 66px; }
+    .end {
+      width: 88px; height: 88px; border-radius: 999px; border: none;
+      background: #ef4444; color: #fff; font-size: 38px; cursor: pointer;
+      box-shadow: 0 12px 28px rgba(239, 68, 68, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div id="caller-name" class="name">Caller</div>
+    <div class="timer">00:06</div>
+  </div>
+
+  <div class="grid">
+    <div class="item"><button id="mute-btn" class="btn">🎤</button><div class="label">mute</div></div>
+    <div class="item"><button id="keypad-btn" class="btn">⌨️</button><div class="label">keypad</div></div>
+    <div class="item"><button id="audio-btn" class="btn">🔊</button><div class="label">audio</div></div>
+    <div class="item"><button class="btn">＋</button><div class="label">add call</div></div>
+    <div class="item"><button class="btn">📹</button><div class="label">video</div></div>
+    <div class="item"><button class="btn">👤</button><div class="label">contacts</div></div>
+  </div>
+
+  <div class="end-wrap">
+    <button id="end-call-btn" class="end">📞</button>
+  </div>
+</body>
+</html>

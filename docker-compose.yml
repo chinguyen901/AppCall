@@ -1,9 +1,8 @@
-version: '3.8'
-
 services:
   kamailio:
     build: ./docker/kamailio
     container_name: kamailio
+    restart: unless-stopped
     ports:
       - "5065:5060/udp"
       - "5065:5060/tcp"
